@@ -1,0 +1,37 @@
+{
+  "screen": {
+    "bgcolor": "black",
+    "tracer": 0,
+    "sleep": 0.01,
+  "title": "Solar System",
+    "width": 800,
+    "height": 600
+  },
+  "scale": {
+    "km_per_pixel": 1
+  },
+  "orbits": {
+    "show": true,
+    "color": "white",
+    "width": 1
+  },
+  "planet_design": {
+    "shape": "circle",
+    "shapesize": 0.5
+  },
+  "planets": [
+  { "name": "Mercury", "radius": 40,  "color": "grey",     "speed_kmh": 172332, "label_color": "black" },
+  { "name": "Venus",   "radius": 80,  "color": "orange",   "speed_kmh": 126072, "label_color": "black" },
+  { "name": "Earth",   "radius": 100, "color": "blue",     "speed_kmh": 107208, "label_color": "black" },
+  { "name": "Mars",    "radius": 150, "color": "red",      "speed_kmh": 86677,  "label_color": "black" },
+  { "name": "Jupiter", "radius": 180, "color": "brown",    "speed_kmh": 47052,  "label_color": "black" },
+  { "name": "Saturn",  "radius": 230, "color": "pink",     "speed_kmh": 34884,  "label_color": "black" },
+  { "name": "Uranus",  "radius": 250, "color": "lightblue","speed_kmh": 24480,  "label_color": "black" },
+  { "name": "Neptune", "radius": 280, "color": "black",    "speed_kmh": 19548,  "label_color": "black" }
+  ]
+  ,
+  "labels": {
+    "color": "white",
+    "font": ["Arial", 8, "normal"]
+  }
+}
