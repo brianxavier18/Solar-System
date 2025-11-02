@@ -1,5 +1,6 @@
-Visão geral rápida
-Esse projeto é uma simulação simples do sistema solar feita com Turtle. Está modularizada Visão Geral Rápida do Projeto
+Esse projeto é uma simulação simples do sistema solar feita com Turtle. 
+
+Visão Geral Rápida do Projeto
 
 Este projeto é uma simulação simples do sistema solar, desenvolvida com a biblioteca Turtle do Python. A estrutura do código é modular, organizada em três módulos principais e um arquivo de configuração:
 main.py: Orquestra a simulação, carregando configurações, inicializando a tela, o sol e os planetas. Contém o loop principal, as associações de teclas (keybindings) e a geração automática do arquivo config.json.
@@ -14,8 +15,9 @@ main.py
 display.py
 planets.py
 config.json
-c:\Users\xavie\Downloads\solar-system\solar system.py (legado)
-main.py — Orquestração e ConfiguraçãoPontos Principais
+c:\Users\xxx\xxx\solar-system\solar system.py (legado)
+main.py — Orquestração e Configuração
+Pontos Principais
 DEFAULT_CONFIG Embutido: Contém valores padrão para a tela (screen), escala (scale.km_per_pixel), rótulos (labels) e a lista de planetas (nome, raio em pixels, cor, speed_kmh). Isso garante que o programa possa ser executado mesmo sem o config.json.
 Carregamento e Fusão de Configurações:
 A função load_config(path) tenta abrir config.json. Se o arquivo não existir, ele é criado com o DEFAULT_CONFIG formatado em JSON.
