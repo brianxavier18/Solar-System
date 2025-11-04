@@ -355,9 +355,136 @@ Rótulos configuráveis: implementado (global labels.color e font aplicados a to
 Órbitas visíveis: implementado (via draw_orbits e orbits.show e orbits.color).
 Pausar/controle de velocidade: implementado (space / + / -).
 Geração automática de config.json: implementado (primeira execução cria o arquivo).
-Se quiser, eu faço agora (escolha uma opção):
 
-A) Ajustar DEFAULT_CONFIG['scale']['km_per_pixel'] para um valor padrão mais apropriado (ex.: 100) e regravar config.json automaticamente (ou te mostrar o valor a mudar).
-B) Adicionar HUD que mostre speed_multiplier, km_per_pixel e estado paused.
-C) Implementar zoom interativo (+/- para km_per_pixel) com feedback no título.
-D) Gerar um README.md automático descrevendo as opções do config.json
+
+Atualização:
+# Documentação do módulo `star`
+
+Este documento descreve o módulo `star.py` (localizado na raiz do projeto) que gera e atualiza "estrelas" decorativas no plano de fundo da simulação do sistema solar.
+
+## Visão geral
+
+O módulo fornece um sistema simples de partículas visuais (cada "estrela" é uma Turtle) que:
+- Surgem aleatoriamente por toda a tela (horizontal e vertical).
+- Têm vida curta e fazem um pequeno "piscar" (efeito de fade triangular via `shapesize`).
+- Possuem cor individual (tons pastel e/ou cores vivas) que é escolhida quando a estrela é criada.
+
+O objetivo é um efeito estético leve, sem interferir nas órbitas dos planetas.
+
+## Funções públicas
+
+### init_stars(cfg, screen, sun, planet_radii)
+
+- Descrição: cria e retorna uma lista inicial de estrelas. Cada estrela é um dicionário com as chaves: `t` (turtle), `born` (timestamp), `life` (segundos) e `color` (hex string).
+- Assinatura: `init_stars(cfg: dict, screen, sun, planet_radii: list) -> list`
+- Parâmetros:
+  - `cfg`: dicionário carregado de `config.json`. O módulo lê opcionalmente `cfg['stars']` para parâmetros (ver "Configuração" abaixo).
+  - `screen`: objeto `turtle.Screen()` utilizado para consulta do canvas (tamanho real) e integração visual.
+  - `sun`: turtle do Sol; usada apenas para referência (coordenadas centro).
+  - `planet_radii`: lista de raios (pixels) dos planetas — atualmente `init_stars` posiciona estrelas por todo o canvas (não bloqueia totalmente as órbitas), mas os raios podem ser usados em versões futuras.
+- Retorno: lista de dicionários representando estrelas.
+
+### update_stars(stars, cfg, now)
+
+- Descrição: atualiza o estado das estrelas existentes (reduz a "vida", aplica shapesize para o efeito de fade, remove as expiradas) e, com probabilidade, cria novas estrelas distribuídas por todo o canvas.
+- Assinatura: `update_stars(stars: list, cfg: dict, now: float) -> None`
+- Parâmetros:
+  - `stars`: lista retornada por `init_stars` (modificada in-place).
+  - `cfg`: dicionário de configuração; o módulo pode esperar `cfg['__screen_obj__'] = screen` antes de chamar para usar o tamanho real do canvas.
+  - `now`: timestamp atual (ex.: `time.time()`), usado para calcular idade das estrelas.
+- Retorno: nada (a lista `stars` é atualizada in-place).
+
+### random_light_color() / random_vivid_color()
+
+- Funções utilitárias que geram strings hex (`#rrggbb`) para cores pastel e cores vivas. Usadas internamente para compor a paleta padrão.
+
+## Estrutura de uma estrela (exemplo)
+
+Cada elemento da lista `stars` tem o formato aproximado:
+
+{
+  't': <turtle.Turtle object>,
+  'born': 169...,          # timestamp (float)
+  'life': 0.5,             # tempo de vida em segundos
+  'color': '#f2f7ff'       # cor hexadecimal
+}
+
+A `turtle` está posicionada na tela e visível; quando a estrela expira, sua turtle é removida/ocultada (mover para fora da tela).
+
+## Configuração via `config.json`
+
+O módulo lê `cfg.get('stars')` para parâmetros opcionais. Exemplo de seção em `config.json`:
+
+"stars": {
+  "count": 120,
+  "lifetime": 0.5,
+  "spawn_chance": 0.2,
+  "max_new_per_frame": 6,
+  "colors": ["#ffe6a7", "#ffd1dc", "#a7d8ff", "#d1ffa7"]
+}
+
+- `count`: quantidade inicial de estrelas (default: 120).
+- `lifetime`: vida padrão em segundos (default: 0.5).
+- `spawn_chance`: probabilidade por tentativa de spawn por frame (default: 0.2).
+- `max_new_per_frame`: número máximo de tentativas de spawn por frame (default: 6).
+- `colors`: lista opcional de hex strings; se presente, é usada como paleta fixa (sem gerar aleatoriamente).
+
+Se `stars` não existir no config, o módulo gera uma paleta aleatória (mix de tons pastel e cores vivas) e usa valores padrão para `count`, `lifetime`, etc.
+
+## Integração com `main.py`
+
+No projeto atual `main.py` já integra o módulo de estrelas da seguinte forma:
+
+- Importa: `from star import init_stars, update_stars`
+- Inicializa: `stars = init_stars(cfg, screen, sun, [p.radius for p in planets])`
+- No loop principal chama: `update_stars(stars, cfg, now)`
+- O atalho `f` foi implementado para regenerar estrelas (chama `init_stars` novamente) e o atalho `r` restaura órbitas originais.
+
+Observações:
+- Para que `update_stars` detecte o tamanho real do canvas, `main.py` passa `cfg['__screen_obj__'] = screen` antes de chamar `init_stars`/`update_stars` quando faz a regeneração via atalho.
+
+## Exemplos de uso
+
+Inicializar e usar (simplificado):
+
+from star import init_stars, update_stars
+import time
+
+cfg = load_config('config.json')
+screen = setup_screen(cfg)
+sun = create_sun()
+
+stars = init_stars(cfg, screen, sun, planet_radii=[40,80,100])
+
+while True:
+    now = time.time()
+    update_stars(stars, cfg, now)
+    screen.update()
+    time.sleep(0.01)
+
+## Performance e boas práticas
+
+- Cada estrela é uma `turtle.Turtle` — criar/destrocar muitas instâncias rapidamente pode degradar a performance. Se notar lentidão, recomenda-se:
+  - Implementar um pool de turtles (reutilizar objetos em vez de criar/destrocar).
+  - Reduzir `count`, `spawn_chance` ou `max_new_per_frame`.
+  - Reduzir a taxa de atualização (`sleep` maior no loop principal).
+
+- Para efeitos sutis, prefira `shapesize` pequeno (0.04–0.12) e paletas suaves.
+
+## Possíveis melhorias futuras
+
+- Pool de turtles para melhor performance.
+- Evitar explicitamente áreas próximas às órbitas (usar `_random_point_avoid_orbits` para spawn contínuo).
+- Integração com camada de configuração dinâmica (UI) para ajustar densidade/cores em tempo real.
+- Tornar `update_stars` capaz de receber explicitamente o objeto `screen` como terceiro parâmetro em vez de colocar em `cfg['__screen_obj__']`.
+
+## Troubleshooting
+
+- Se as estrelas não aparecem:
+  - Verifique se `init_stars` foi chamado e que `stars` não está vazio.
+  - Confirme que o loop principal chama `update_stars(stars, cfg, time.time())` regularmente.
+  - Em alguns backends do Tkinter o `canvas.winfo_width()` retorna 1 até a janela ser renderizada — o módulo tem fallback para `cfg['screen'].width`.
+
+- Se houver lentidão:
+  - Diminua `count` e `max_new_per_frame` no `config.json`.
+
